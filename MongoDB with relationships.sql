@@ -1,48 +1,47 @@
-// Inserting customer documents into the customers collection
+
 db.customers.insertMany([
     { 
-        name: "John Doe", 
-        email: "johndoe@example.com", 
-        address: { street: "123 Main St", city: "Springfield", zipcode: "12345" }, 
-        phone: "555-1234", 
-        registration_date: new Date("2023-01-01T12:00:00Z") 
+        name: "Kowshik", 
+        email: "Kowshik@example.com", 
+        address: {city: "Chennai", zipcode: "600000" }, 
+        phone: "94949494", 
+        registration_date: new Date() 
     },
     { 
-        name: "Jane Smith", 
-        email: "janesmith@example.com", 
-        address: { street: "456 Elm St", city: "Shelbyville", zipcode: "54321" }, 
-        phone: "555-5678", 
-        registration_date: new Date("2023-02-15T12:00:00Z") 
+        name: "Him", 
+        email: "him@example.com", 
+        address: {city: "Hyderabad", zipcode: "500000" }, 
+        phone: "94949495", 
+        registration_date: new Date() 
     },
     { 
-        name: "Alice Johnson", 
-        email: "alicej@example.com", 
-        address: { street: "789 Oak St", city: "Springfield", zipcode: "12345" }, 
-        phone: "555-8765", 
-        registration_date: new Date("2023-03-10T12:00:00Z") 
+        name: "her", 
+        email: "her@example.com", 
+        address: {city: "Bengaluru", zipcode: "300000" }, 
+        phone: "94944996", 
+        registration_date: new Date() 
     },
     { 
-        name: "Bob Brown", 
-        email: "bobbrown@example.com", 
-        address: { street: "321 Pine St", city: "Shelbyville", zipcode: "54321" }, 
-        phone: "555-4321", 
-        registration_date: new Date("2023-04-20T12:00:00Z") 
+        name: "Them", 
+        email: "them@example.com", 
+        address: {city: "TVM", zipcode: "200000" }, 
+        phone: "45456456", 
+        registration_date: new Date() 
     },
     { 
-        name: "Carol White", 
-        email: "carolwhite@example.com", 
-        address: { street: "654 Maple St", city: "Springfield", zipcode: "12345" }, 
-        phone: "555-6789", 
-        registration_date: new Date("2023-05-05T12:00:00Z") 
+        name: "Us", 
+        email: "us@example.com", 
+        address: {city: "Madurai", zipcode: "100000" }, 
+        phone: "55555555", 
+        registration_date: new Date() 
     }
 ]);
 
-// Inserting order documents into the orders collection, linked to customers by customer_id
 db.orders.insertMany([
     { 
         order_id: "ORD123456", 
-        customer_id: ObjectId('67320c549ec744648a0d8190'), // John Doe's ObjectId
-        order_date: new Date("2023-05-15T14:00:00Z"), 
+        customer_id: 
+        order_date: new Date(), 
         status: "shipped", 
         items: [
             { product_name: "Laptop", quantity: 1, price: 1500 }, 
@@ -94,7 +93,6 @@ db.orders.insertMany([
     }
 ]);
 
-// Calculate Total Value of All Orders by Customer
 db.orders.aggregate([
     { $group: { _id: "$customer_id", total_spent: { $sum: "$total_value" } } },
     { $lookup: { from: "customers", localField: "_id", foreignField: "_id", as: "customer" } },
@@ -107,7 +105,6 @@ db.orders.aggregate([
     { $group: { _id: "$status", order_count: { $sum: 1 } } }
 ]);
 
-//  List Customers with Their Recent Orders
 db.orders.aggregate([
     { $sort: { order_date: -1 } },
     { $group: { _id: "$customer_id", recent_order: { $first: "$$ROOT" } } },
@@ -116,7 +113,6 @@ db.orders.aggregate([
     { $project: { name: "$customer.name", email: "$customer.email", order_id: "$recent_order.order_id", total_value: "$recent_order.total_value" } }
 ]);
 
-//  Find the Most Expensive Order by Customer
 db.orders.aggregate([
     { $sort: { total_value: -1 } },
     { $group: { _id: "$customer_id", most_expensive_order: { $first: "$$ROOT" } } },
@@ -124,8 +120,6 @@ db.orders.aggregate([
     { $unwind: "$customer" },
     { $project: { name: "$customer.name", order_id: "$most_expensive_order.order_id", total_value: "$most_expensive_order.total_value" } }
 ]);
-
-//  Find All Customers Who Placed Orders in the Last Month
 db.orders.aggregate([
     { $match: { order_date: { $gte: new Date(new Date().setMonth(new Date().getMonth() - 1)) } } },
     { $group: { _id: "$customer_id", recent_order: { $first: "$$ROOT" } } },
@@ -133,15 +127,12 @@ db.orders.aggregate([
     { $unwind: "$customer" },
     { $project: { name: "$customer.name", email: "$customer.email", order_date: "$recent_order.order_date" } }
 ]);
-
-//  Find All Products Ordered by a Specific Customer
 db.orders.aggregate([
     { $match: { customer_id: ObjectId('67320c549ec744648a0d8190') } },
     { $unwind: "$items" },
     { $group: { _id: "$items.product_name", total_quantity: { $sum: "$items.quantity" } } }
 ]);
 
-//  Find the Top 3 Customers with the Most Expensive Total Orders
 db.orders.aggregate([
     { $group: { _id: "$customer_id", total_spent: { $sum: "$total_value" } } },
     { $sort: { total_spent: -1 } },
@@ -151,7 +142,6 @@ db.orders.aggregate([
     { $project: { name: "$customer.name", total_spent: 1 } }
 ]);
 
-//  Add a New Order for an Existing Customer
 db.orders.insertOne({
     order_id: "ORD123461",
     customer_id: ObjectId("67320c549ec744648a0d8191"),
@@ -164,14 +154,11 @@ db.orders.insertOne({
     total_value: 800
 });
 
-//  Find Customers Who Have Not Placed Orders
 db.customers.aggregate([
     { $lookup: { from: "orders", localField: "_id", foreignField: "customer_id", as: "orders" } },
     { $match: { "orders": { $size: 0 } } },
     { $project: { name: 1, email: 1 } }
 ]);
-
-//  Find the Most Popular Product in Orders
 db.orders.aggregate([
     { $unwind: "$items" },
     { $group: { _id: "$items.product_name", total_quantity: { $sum: "$items.quantity" } } },
@@ -179,7 +166,6 @@ db.orders.aggregate([
     { $limit: 1 }
 ]);
 
-//  Find the Total Number of Orders by Each Customer
 db.orders.aggregate([
     { $group: { _id: "$customer_id", order_count: { $sum: 1 } } },
     { $lookup: { from: "customers", localField: "_id", foreignField: "_id", as: "customer" } },
